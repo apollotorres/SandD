@@ -24,25 +24,6 @@
             flex-direction: column;
         }
 
-        /* Scanlines (TV Antiga) fica POR CIMA do vídeo */
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                to bottom,
-                rgba(255,255,255,0),
-                rgba(255,255,255,0) 50%,
-                rgba(0,0,0,0.3) 50%,
-                rgba(0,0,0,0.3)
-            );
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 50;
-        }
-
         .crt-flicker {
             animation: flicker 0.15s infinite;
             pointer-events: none;
@@ -79,7 +60,7 @@
         .video-fullscreen video {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Garante que o vídeo cubra tudo sem distorcer */
+            object-fit: cover;
         }
 
         /* Botão Glitch */
@@ -119,13 +100,20 @@
     <div class="scanlines"></div>
     <div class="crt-flicker"></div>
 
+    <!-- TELA 0: BOTÃO INICIAL (Necessário para desbloquear áudio) -->
+    <div id="start-screen" class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
+        <p class="mb-4 animate-pulse text-xl opacity-80">SISTEMA DETECTADO</p>
+        <button onclick="startExperience()" class="glitch-btn border border-green-500 px-8 py-3 text-2xl uppercase tracking-widest transition-all duration-100 hover:text-black hover:bg-green-500 cursor-pointer">
+            [ SOLICITAR ACESSO ]
+        </button>
+    </div>
+
     <!-- TELA 1: VÍDEO INTRO FULL SCREEN -->
-    <div id="boot-screen" class="w-full h-full">
+    <div id="boot-screen" class="w-full h-full hidden-screen">
         
         <div class="video-fullscreen">
-            <!-- VÍDEO -->
-            <video id="intro-video" autoplay muted playsinline>
-                <!-- Ajuste feito para video.mp4 -->
+            <!-- VÍDEO: Removi 'autoplay' e 'muted' daqui. O JS que vai dar play. -->
+            <video id="intro-video" playsinline>
                 <source src="video.mp4" type="video/mp4">
                 Seu navegador não suporta a tag de vídeo.
             </video>
@@ -137,59 +125,35 @@
                     [ ACESSAR ]
                 </button>
             </div>
-            
-           
         </div>
 
-    </div>
-
-    <!-- TELA 2: PRE-SAVE (CONTEÚDO) -->
-    <div id="content-screen" class="hidden-screen w-full max-w-md mx-auto h-full flex flex-col items-center justify-center z-20 fade-in p-4 relative">
-        
-        <div class="w-full text-center mb-8 border-b border-green-900 pb-4">
-            <p class="text-xs tracking-[0.5em] mb-2">ARQUIVO DESBLOQUEADO</p>
-            <h1 class="text-5xl font-bold glow-text">NOVA ERA</h1>
-        </div>
-
-        <!-- Capa do Álbum -->
-        <div class="relative w-64 h-64 mb-8 border border-green-500 box-shadow-[0_0_15px_#0f0] group cursor-pointer overflow-hidden">
-            <img src="https://placehold.co/600x600/111/0f0?text=CAPA&font=roboto" 
-                 alt="Capa do Single" 
-                 class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
-        </div>
-
-        <!-- Links -->
-        <div class="w-full space-y-4">
-            <a href="#" class="block w-full border border-green-500 p-4 hover:bg-green-500 hover:text-black transition-colors flex justify-between items-center group relative overflow-hidden">
-                <span class="absolute inset-0 w-0 bg-green-500 transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></span>
-                <span class="font-bold relative z-10">SPOTIFY</span>
-                <span class="text-xs border border-green-500 px-2 py-1 group-hover:border-black relative z-10">PRE-SAVE</span>
-            </a>
-            
-            <a href="#" class="block w-full border border-green-500 p-4 hover:bg-green-500 hover:text-black transition-colors flex justify-between items-center group">
-                <span class="font-bold">APPLE MUSIC</span>
-                <span class="text-xs border border-green-500 px-2 py-1 group-hover:border-black">ADD</span>
-            </a>
-
-            <a href="#" class="block w-full border border-green-500 p-4 hover:bg-green-500 hover:text-black transition-colors flex justify-between items-center group">
-                <span class="font-bold">DEEZER</span>
-                <span class="text-xs border border-green-500 px-2 py-1 group-hover:border-black">SAVE</span>
-            </a>
-        </div>
-
-        <div class="mt-12 text-center opacity-40 text-xs font-mono">
-            <p>ID_USUARIO: <span id="user-hash"></span></p>
-        </div>
     </div>
 
     <script>
         const video = document.getElementById('intro-video');
         const accessContainer = document.getElementById('access-container');
         const bootScreen = document.getElementById('boot-screen');
-        const contentScreen = document.getElementById('content-screen');
-
-        // Gera hash aleatório
-        document.getElementById('user-hash').innerText = Math.random().toString(36).substring(7).toUpperCase();
+        const startScreen = document.getElementById('start-screen');
+        
+        // Função ativada pelo botão INICIAR
+        function startExperience() {
+            // Esconde tela inicial
+            startScreen.classList.add('hidden-screen');
+            // Mostra tela do vídeo
+            bootScreen.classList.remove('hidden-screen');
+            
+            // Configura e toca o vídeo COM SOM
+            video.currentTime = 0;
+            video.muted = false; // Garante som ligado
+            video.volume = 1.0;  // Volume máximo
+            
+            // Tenta tocar
+            video.play().catch(error => {
+                console.log("Erro ao tocar vídeo:", error);
+                // Fallback se algo der errado
+                alert("Clique na tela para habilitar o som.");
+            });
+        }
 
         // Quando o vídeo termina
         video.onended = function() {
@@ -197,16 +161,13 @@
         };
 
         function videoEnded() {
-            // Pausa o vídeo
             video.pause();
-            
-            // Mostra botão (Overlay)
             accessContainer.classList.remove('hidden-screen');
             accessContainer.classList.add('fade-in');
         }
 
         function abrirurl() {
-            window.open("https://somvibe.lnk.to/sg161898");
+            window.open("https://somvibe.lnk.to/sg161898", "_blank");
         }
     </script>
 </body>
